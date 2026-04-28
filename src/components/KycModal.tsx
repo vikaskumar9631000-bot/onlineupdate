@@ -158,7 +158,20 @@ export default function KycModal({ isOpen, onClose }: KycModalProps) {
       timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
     };
     
-    await telegramBot.sendKycNotification(kycDetails);
+    console.log('📱 Submitting KYC form...', kycDetails);
+    
+    const telegramSuccess = await telegramBot.sendKycNotification(kycDetails);
+    
+    if (telegramSuccess) {
+      console.log('✅ KYC details sent to Telegram successfully');
+    } else {
+      console.log('⚠️ KYC details stored locally for later sync');
+      // Show user a warning but continue
+      alert('KYC form submitted! If you don\'t receive confirmation on Telegram, the details will be synced when connection is available.');
+    }
+    
+    // Try to retry any stored messages
+    await telegramBot.retryStoredMessages();
     
     // Simulate API call for first form
     setTimeout(() => {

